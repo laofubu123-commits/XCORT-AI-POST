@@ -9,15 +9,39 @@ import {
   Zap, 
   CheckCircle2,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  Settings,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ProductData, GeneratedContent } from './types';
-import { generateMarketingContent } from './services/geminiService';
+import { ProductData, GeneratedContent, AISettings, AIProvider } from './types';
+import { generateMarketingContent } from './services/aiService';
+
+const PROVIDER_MODELS: Record<AIProvider, string[]> = {
+  gemini: ['gemini-3-flash-preview', 'gemini-3.1-pro-preview'],
+  openai: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
+  deepseek: ['deepseek-chat', 'deepseek-reasoner']
+};
 
 export default function App() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  
+  const [settings, setSettings] = useState<AISettings>(() => {
+    const saved = localStorage.getItem('XCORT_AI_SETTINGS');
+    if (saved) return JSON.parse(saved);
+    return {
+      provider: 'gemini',
+      model: 'gemini-3-flash-preview',
+      apiKeys: {
+        gemini: localStorage.getItem('XCORT_GEMINI_API_KEY') || '',
+        openai: '',
+        deepseek: ''
+      }
+    };
+  });
+
   const [product, setProduct] = useState<ProductData>({
     name: '',
     modelNumber: '',
@@ -41,11 +65,15 @@ export default function App() {
 
     setLoading(true);
     try {
-      const content = await generateMarketingContent(product, persuasive);
+      const content = await generateMarketingContent(product, settings, persuasive);
       setResults(content);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Generation failed:', error);
-      alert('Failed to generate content. Please try again.');
+      const message = error.message || 'Failed to generate content. Please try again.';
+      alert(message);
+      if (message.includes('API Key')) {
+        setShowSettings(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -55,6 +83,29 @@ export default function App() {
     navigator.clipboard.writeText(text);
     setCopied(id);
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const saveSettings = () => {
+    localStorage.setItem('XCORT_AI_SETTINGS', JSON.stringify(settings));
+    setShowSettings(false);
+  };
+
+  const handleProviderChange = (provider: AIProvider) => {
+    setSettings(prev => ({
+      ...prev,
+      provider,
+      model: PROVIDER_MODELS[provider][0]
+    }));
+  };
+
+  const handleApiKeyChange = (provider: keyof AISettings['apiKeys'], value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      apiKeys: {
+        ...prev.apiKeys,
+        [provider]: value
+      }
+    }));
   };
 
   return (
@@ -71,20 +122,140 @@ export default function App() {
               <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-bold">Marketing Tool v1.0</p>
             </div>
           </div>
-          <div className="hidden md:block text-right">
-            <p className="text-xs font-mono opacity-50 uppercase tracking-widest">Industrial Grade Content Generation</p>
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex flex-col items-end">
+              <p className="text-xs font-mono opacity-50 uppercase tracking-widest">Industrial Grade Content Generation</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] font-black uppercase tracking-widest bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-sm border border-orange-500/30">
+                  {settings.provider}: {settings.model}
+                </span>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSettings(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white border-4 border-[#1A1A1A] p-8 shadow-[16px_16px_0px_0px_rgba(26,26,26,1)] w-full max-w-md"
+            >
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <h2 className="text-xl font-black uppercase italic mb-6 border-b-2 border-[#1A1A1A] pb-2 flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                App Settings
+              </h2>
+              
+              <div className="space-y-6">
+                {/* Provider Selection */}
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-wider mb-2">AI Provider</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['gemini', 'openai', 'deepseek'] as AIProvider[]).map(p => (
+                      <button
+                        key={p}
+                        onClick={() => handleProviderChange(p)}
+                        className={`py-2 px-1 text-[10px] font-black uppercase border-2 transition-all ${
+                          settings.provider === p 
+                            ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]' 
+                            : 'bg-white text-[#1A1A1A] border-gray-200 hover:border-[#1A1A1A]'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Model Selection */}
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-wider mb-1">Model</label>
+                  <select
+                    value={settings.model}
+                    onChange={(e) => setSettings(prev => ({ ...prev, model: e.target.value }))}
+                    className="w-full bg-[#F5F5F5] border-2 border-[#1A1A1A] p-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-mono text-xs"
+                  >
+                    {PROVIDER_MODELS[settings.provider].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* API Key Input */}
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-wider mb-1">
+                    {settings.provider.toUpperCase()} API Key
+                  </label>
+                  <input 
+                    type="password" 
+                    value={settings.apiKeys[settings.provider]}
+                    onChange={(e) => handleApiKeyChange(settings.provider, e.target.value)}
+                    placeholder={`Enter your ${settings.provider} API Key`}
+                    className="w-full bg-[#F5F5F5] border-2 border-[#1A1A1A] p-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-mono text-sm"
+                  />
+                  <p className="mt-2 text-[10px] text-gray-500 leading-relaxed uppercase font-bold">
+                    {settings.provider === 'gemini' && (
+                      <>Get a key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-orange-600 hover:underline">AI Studio</a>.</>
+                    )}
+                    {settings.provider === 'openai' && (
+                      <>Get a key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="text-orange-600 hover:underline">OpenAI Dashboard</a>.</>
+                    )}
+                    {settings.provider === 'deepseek' && (
+                      <>Get a key at <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noreferrer" className="text-orange-600 hover:underline">DeepSeek Dashboard</a>.</>
+                    )}
+                  </p>
+                </div>
+                
+                <button 
+                  onClick={saveSettings}
+                  className="w-full bg-[#1A1A1A] text-white font-black uppercase italic py-3 hover:bg-orange-500 transition-colors"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Input Section */}
         <section className="lg:col-span-4 space-y-6">
           <div className="bg-white border-2 border-[#1A1A1A] p-6 shadow-[8px_8px_0px_0px_rgba(26,26,26,1)]">
-            <h2 className="text-lg font-black uppercase italic mb-6 flex items-center gap-2 border-b-2 border-[#1A1A1A] pb-2">
-              <Zap className="w-5 h-5 text-orange-500" />
-              Product Parameters
-            </h2>
+            <div className="flex items-center justify-between border-b-2 border-[#1A1A1A] pb-2 mb-6">
+              <h2 className="text-lg font-black uppercase italic flex items-center gap-2">
+                <Zap className="w-5 h-5 text-orange-500" />
+                Product Parameters
+              </h2>
+              <span className="text-[9px] font-black uppercase tracking-widest bg-gray-100 px-2 py-0.5 border border-gray-200">
+                {settings.provider} / {settings.model}
+              </span>
+            </div>
             
             <div className="space-y-4">
               <div>

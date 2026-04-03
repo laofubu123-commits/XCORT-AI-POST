@@ -1,3 +1,15 @@
+export type AIProvider = 'gemini' | 'openai' | 'deepseek';
+
+export interface AISettings {
+  provider: AIProvider;
+  model: string;
+  apiKeys: {
+    gemini: string;
+    openai: string;
+    deepseek: string;
+  };
+}
+
 export interface ProductData {
   name: string;
   modelNumber: string;
