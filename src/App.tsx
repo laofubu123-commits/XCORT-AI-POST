@@ -4,6 +4,7 @@ import {
   Facebook, 
   FileText, 
   Image as ImageIcon, 
+  Video,
   Copy, 
   RefreshCw, 
   Zap, 
@@ -11,7 +12,8 @@ import {
   Loader2,
   ChevronRight,
   Settings,
-  X
+  X,
+  Clapperboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ProductData, GeneratedContent, AISettings, AIProvider } from './types';
@@ -25,6 +27,14 @@ const PROVIDER_MODELS: Record<AIProvider, string[]> = {
 
 export default function App() {
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const loadingSteps = [
+    "Analyzing product parameters...",
+    "Generating multilingual marketing copy...",
+    "Crafting professional image prompts...",
+    "Designing 30s video storyboard...",
+    "Finalizing industrial-grade content..."
+  ];
   const [copied, setCopied] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   
@@ -52,29 +62,50 @@ export default function App() {
   });
   const [results, setResults] = useState<GeneratedContent | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProduct(prev => ({ ...prev, [name]: value }));
+    if (error) setError(null);
   };
 
   const handleGenerate = async (persuasive = false) => {
     if (!product.name || !product.modelNumber || !product.features) {
-      alert('Please fill in the required fields (Name, Model Number, Features)');
+      setError('Please fill in the required fields (Name, Model Number, Features)');
       return;
     }
 
     setLoading(true);
+    setLoadingStep(0);
+    setError(null);
+
+    // Progress simulation for better UX
+    const interval = setInterval(() => {
+      setLoadingStep(prev => (prev < loadingSteps.length - 1 ? prev + 1 : prev));
+    }, 3000);
+
     try {
-      const content = await generateMarketingContent(product, settings, persuasive);
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out. The AI is taking longer than expected to generate the full industrial script. Please try again or check your network.')), 60000)
+      );
+
+      const content = await Promise.race([
+        generateMarketingContent(product, settings, persuasive),
+        timeoutPromise
+      ]) as GeneratedContent;
+      
       setResults(content);
-    } catch (error: any) {
-      console.error('Generation failed:', error);
-      const message = error.message || 'Failed to generate content. Please try again.';
-      alert(message);
-      if (message.includes('API Key')) {
+    } catch (err: any) {
+      console.error('Generation failed:', err);
+      const message = err.message || 'Failed to generate content. Please try again.';
+      setError(message);
+      if (message.toLowerCase().includes('api key')) {
         setShowSettings(true);
       }
     } finally {
+      clearInterval(interval);
       setLoading(false);
     }
   };
@@ -334,17 +365,45 @@ export default function App() {
               <button 
                 onClick={() => handleGenerate(false)}
                 disabled={loading}
-                className="w-full bg-[#1A1A1A] text-white font-black uppercase italic py-4 flex items-center justify-center gap-2 hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+                className="w-full bg-[#1A1A1A] text-white font-black uppercase italic py-4 flex flex-col items-center justify-center gap-1 hover:bg-orange-500 transition-colors disabled:opacity-80 disabled:cursor-not-allowed group relative overflow-hidden"
               >
                 {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
                   <>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Generating...</span>
+                    </div>
+                    <span className="text-[9px] normal-case font-medium opacity-70 animate-pulse">
+                      {loadingStep < loadingSteps.length - 1 ? loadingSteps[loadingStep] : "Almost there, finalizing the details..."}
+                    </span>
+                    {/* Progress bar */}
+                    <div 
+                      className="absolute bottom-0 left-0 h-1 bg-orange-400 transition-all duration-1000" 
+                      style={{ 
+                        width: loadingStep < loadingSteps.length - 1 
+                          ? `${((loadingStep + 1) / loadingSteps.length) * 100}%` 
+                          : "95%" 
+                      }} 
+                    />
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
                     Generate Content
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </>
+                  </div>
                 )}
               </button>
+
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 border-2 border-red-500 p-4 flex items-start gap-3"
+                >
+                  <X className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-red-700 leading-tight">{error}</p>
+                </motion.div>
+              )}
             </div>
           </div>
 
@@ -506,6 +565,84 @@ export default function App() {
                   </div>
                   <div className="p-6 whitespace-pre-wrap font-medium text-sm leading-relaxed max-h-[400px] overflow-y-auto custom-scrollbar">
                     {results.detailPage}
+                  </div>
+                </div>
+
+                {/* Video Script */}
+                <div className="bg-white border-2 border-[#1A1A1A] shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] overflow-hidden">
+                  <div className="bg-[#1A1A1A] text-white p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clapperboard className="w-5 h-5 text-green-400" />
+                      <h3 className="font-black uppercase italic text-sm tracking-widest">30s Video Storyboard Script</h3>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const fullScript = JSON.stringify(results.videoScript, null, 2);
+                        copyToClipboard(fullScript, 'vs-full');
+                      }}
+                      className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
+                    >
+                      {copied === 'vs-full' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copied === 'vs-full' ? 'Copied!' : 'Copy Full Script'}
+                    </button>
+                  </div>
+                  
+                  <div className="p-6 space-y-8 max-h-[600px] overflow-y-auto custom-scrollbar">
+                    {[1, 2, 3].map((partNum) => {
+                      const partKey = `part${partNum}` as keyof typeof results.videoScript;
+                      const partData = results.videoScript[partKey];
+                      const partTitles = ['Part 1: The Problem (0-10s)', 'Part 2: The Solution (10-20s)', 'Part 3: The Result (20-30s)'];
+                      
+                      return (
+                        <div key={partKey} className="space-y-4">
+                          <h4 className="text-xs font-black uppercase tracking-widest bg-orange-100 text-orange-800 px-3 py-1 inline-block border-l-4 border-orange-500">
+                            {partTitles[partNum - 1]}
+                          </h4>
+                          <div className="overflow-x-auto border-2 border-gray-100">
+                            <table className="w-full text-[10px] text-left border-collapse">
+                              <thead>
+                                <tr className="bg-gray-50 border-b-2 border-gray-200">
+                                  <th className="p-2 font-black uppercase border-r border-gray-200">Shot</th>
+                                  <th className="p-2 font-black uppercase border-r border-gray-200">Duration</th>
+                                  <th className="p-2 font-black uppercase border-r border-gray-200">Visual Description</th>
+                                  <th className="p-2 font-black uppercase border-r border-gray-200">Parameters</th>
+                                  <th className="p-2 font-black uppercase">Action/Rhythm</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y border-gray-200">
+                                {partData.map((shot, idx) => (
+                                  <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                    <td className="p-2 font-mono font-bold border-r border-gray-100">{shot.id}</td>
+                                    <td className="p-2 font-mono border-r border-gray-100">{shot.duration}</td>
+                                    <td className="p-2 border-r border-gray-100 leading-relaxed">
+                                      <div className="space-y-1">
+                                        <p className="text-gray-900 font-medium">{shot.descriptionZh}</p>
+                                        <p className="text-gray-500 italic text-[9px]">{shot.descriptionEn}</p>
+                                      </div>
+                                    </td>
+                                    <td className="p-2 border-r border-gray-100">
+                                      <div className="space-y-1">
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Type:</span> {shot.shotType}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Angle:</span> {shot.angle}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Move:</span> {shot.movement}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Light:</span> {shot.lighting}</p>
+                                      </div>
+                                    </td>
+                                    <td className="p-2">
+                                      <div className="space-y-1">
+                                        <p className="text-gray-900 font-medium">{shot.actionZh}</p>
+                                        <p className="text-gray-500 italic text-[9px]">{shot.actionEn}</p>
+                                        <p className="mt-1"><span className="opacity-50 uppercase font-bold text-[8px]">Rhythm:</span> {shot.rhythm}</p>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

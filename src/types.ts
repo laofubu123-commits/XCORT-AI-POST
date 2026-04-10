@@ -19,6 +19,28 @@ export interface ProductData {
   application: string;
 }
 
+export interface VideoShot {
+  id: string;
+  duration: string;
+  descriptionEn: string;
+  descriptionZh: string;
+  shotType: string;
+  angle: string;
+  movement: string;
+  composition: string;
+  actionEn: string;
+  actionZh: string;
+  lighting: string;
+  style: string;
+  rhythm: string;
+}
+
+export interface VideoScript {
+  part1: VideoShot[];
+  part2: VideoShot[];
+  part3: VideoShot[];
+}
+
 export interface GeneratedContent {
   facebookPost: {
     english: string;
@@ -28,4 +50,5 @@ export interface GeneratedContent {
   };
   detailPage: string;
   imagePrompt: string;
+  videoScript: VideoScript;
 }
