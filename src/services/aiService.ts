@@ -101,6 +101,7 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
           text: `Generate a professional 30s video script for: ${product.name}.
           Details: ${JSON.stringify(product)}
           Provide: 3 parts (10s each) with full director parameters.
+          IMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.
           IMPORTANT: Provide both English and Chinese for 'descriptionEn/Zh' and 'actionEn/Zh' fields.`
         }]
       }],
@@ -114,9 +115,9 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
             videoScript: {
               type: Type.OBJECT,
               properties: {
-                part1: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
-                part2: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
-                part3: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } }
+                part1: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
+                part2: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
+                part3: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, rhythm: { type: Type.STRING } } } }
               },
               required: ["part1", "part2", "part3"]
             }
@@ -157,7 +158,8 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
       videoScript: { part1: [], part2: [], part3: [] }
     }
     
-    Each video shot must have: id, duration, descriptionEn, descriptionZh, shotType, angle, movement, composition, actionEn, actionZh, lighting, style, rhythm.
+    IMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.
+    Each video shot must have: id, duration, descriptionEn, descriptionZh, shotType, angle, movement, actionEn, actionZh, lighting, rhythm.
   `;
 
   const res = await fetch(`${baseUrl}/chat/completions`, {
