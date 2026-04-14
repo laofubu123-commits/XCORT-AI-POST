@@ -590,10 +590,10 @@ export default function App() {
                   <div className="p-6 space-y-8 max-h-[600px] overflow-y-auto custom-scrollbar">
                     {[1, 2, 3].map((partNum) => {
                       const partKey = `part${partNum}` as keyof typeof results.videoScript;
-                      const partData = results.videoScript?.[partKey] || [];
+                      const partData = results.videoScript?.[partKey];
                       const partTitles = ['Part 1: The Problem (0-10s)', 'Part 2: The Solution (10-20s)', 'Part 3: The Result (20-30s)'];
                       
-                      if (!partData || partData.length === 0) return null;
+                      if (!Array.isArray(partData) || partData.length === 0) return null;
 
                       return (
                         <div key={partKey} className="space-y-4">
@@ -612,33 +612,35 @@ export default function App() {
                                 </tr>
                               </thead>
                               <tbody className="divide-y border-gray-200">
-                                {partData.map((shot, idx) => (
+                                {partData.map((shot, idx) => {
+                                  if (!shot) return null;
+                                  return (
                                   <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                    <td className="p-2 font-mono font-bold border-r border-gray-100">{shot.id}</td>
-                                    <td className="p-2 font-mono border-r border-gray-100">{shot.duration}</td>
+                                    <td className="p-2 font-mono font-bold border-r border-gray-100">{shot?.id || '-'}</td>
+                                    <td className="p-2 font-mono border-r border-gray-100">{shot?.duration || '-'}</td>
                                     <td className="p-2 border-r border-gray-100 leading-relaxed">
                                       <div className="space-y-1">
-                                        <p className="text-gray-900 font-medium">{shot.descriptionZh}</p>
-                                        <p className="text-gray-500 italic text-[9px]">{shot.descriptionEn}</p>
+                                        <p className="text-gray-900 font-medium">{shot?.descriptionZh || ''}</p>
+                                        <p className="text-gray-500 italic text-[9px]">{shot?.descriptionEn || ''}</p>
                                       </div>
                                     </td>
                                     <td className="p-2 border-r border-gray-100">
                                       <div className="space-y-1">
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Type:</span> {shot.shotType}</p>
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Angle:</span> {shot.angle}</p>
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Move:</span> {shot.movement}</p>
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Light:</span> {shot.lighting}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Type:</span> {shot?.shotType || '-'}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Angle:</span> {shot?.angle || '-'}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Move:</span> {shot?.movement || '-'}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Light:</span> {shot?.lighting || '-'}</p>
                                       </div>
                                     </td>
                                     <td className="p-2">
                                       <div className="space-y-1">
-                                        <p className="text-gray-900 font-medium">{shot.actionZh}</p>
-                                        <p className="text-gray-500 italic text-[9px]">{shot.actionEn}</p>
-                                        <p className="mt-1"><span className="opacity-50 uppercase font-bold text-[8px]">Rhythm:</span> {shot.rhythm}</p>
+                                        <p className="text-gray-900 font-medium">{shot?.actionZh || ''}</p>
+                                        <p className="text-gray-500 italic text-[9px]">{shot?.actionEn || ''}</p>
+                                        <p className="mt-1"><span className="opacity-50 uppercase font-bold text-[8px]">Rhythm:</span> {shot?.rhythm || '-'}</p>
                                       </div>
                                     </td>
                                   </tr>
-                                ))}
+                                )})}
                               </tbody>
                             </table>
                           </div>
