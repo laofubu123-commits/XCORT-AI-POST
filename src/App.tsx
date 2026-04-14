@@ -139,6 +139,16 @@ export default function App() {
     }));
   };
 
+  const safeText = (val: any, fallback = "Content generation failed for this section.") => {
+    if (!val) return fallback;
+    if (typeof val === 'string') return val;
+    try {
+      return JSON.stringify(val, null, 2);
+    } catch (e) {
+      return fallback;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-orange-200">
       {/* Header */}
@@ -150,7 +160,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tighter uppercase italic">XCORT AI</h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-bold">Marketing Tool v1.0</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-bold">Marketing Tool v1.1</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -483,7 +493,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 px-2 py-1">English</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost?.english || '', 'fb-en')}
+                          onClick={() => copyToClipboard(safeText(results.facebookPost?.english, ''), 'fb-en')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-en' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -491,7 +501,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed">
-                        {results.facebookPost?.english || "Content generation failed for this section."}
+                        {safeText(results.facebookPost?.english)}
                       </div>
                     </div>
 
@@ -500,7 +510,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-800 px-2 py-1">Chinese</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost?.chinese || '', 'fb-zh')}
+                          onClick={() => copyToClipboard(safeText(results.facebookPost?.chinese, ''), 'fb-zh')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-zh' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -508,7 +518,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed">
-                        {results.facebookPost?.chinese || "Content generation failed for this section."}
+                        {safeText(results.facebookPost?.chinese)}
                       </div>
                     </div>
 
@@ -517,7 +527,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-yellow-100 text-yellow-800 px-2 py-1">Spanish</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost?.spanish || '', 'fb-es')}
+                          onClick={() => copyToClipboard(safeText(results.facebookPost?.spanish, ''), 'fb-es')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-es' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -525,7 +535,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed">
-                        {results.facebookPost?.spanish || "Content generation failed for this section."}
+                        {safeText(results.facebookPost?.spanish)}
                       </div>
                     </div>
 
@@ -534,7 +544,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-gray-200 text-gray-800 px-2 py-1">Hashtags</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost?.hashtags || '', 'fb-tags')}
+                          onClick={() => copyToClipboard(safeText(results.facebookPost?.hashtags, ''), 'fb-tags')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-tags' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -542,7 +552,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-blue-600">
-                        {results.facebookPost?.hashtags || ""}
+                        {safeText(results.facebookPost?.hashtags, "")}
                       </div>
                     </div>
                   </div>
@@ -556,7 +566,7 @@ export default function App() {
                       <h3 className="font-black uppercase italic text-sm tracking-widest">Product Detail Page</h3>
                     </div>
                     <button 
-                      onClick={() => copyToClipboard(results.detailPage || '', 'dp')}
+                      onClick={() => copyToClipboard(safeText(results.detailPage, ''), 'dp')}
                       className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
                     >
                       {copied === 'dp' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -564,7 +574,7 @@ export default function App() {
                     </button>
                   </div>
                   <div className="p-6 whitespace-pre-wrap font-medium text-sm leading-relaxed max-h-[400px] overflow-y-auto custom-scrollbar">
-                    {results.detailPage || "Content generation failed for this section."}
+                    {safeText(results.detailPage)}
                   </div>
                 </div>
 
@@ -620,23 +630,23 @@ export default function App() {
                                     <td className="p-2 font-mono border-r border-gray-100">{shot?.duration || '-'}</td>
                                     <td className="p-2 border-r border-gray-100 leading-relaxed">
                                       <div className="space-y-1">
-                                        <p className="text-gray-900 font-medium">{shot?.descriptionZh || ''}</p>
-                                        <p className="text-gray-500 italic text-[9px]">{shot?.descriptionEn || ''}</p>
+                                        <p className="text-gray-900 font-medium">{safeText(shot?.descriptionZh, '')}</p>
+                                        <p className="text-gray-500 italic text-[9px]">{safeText(shot?.descriptionEn, '')}</p>
                                       </div>
                                     </td>
                                     <td className="p-2 border-r border-gray-100">
                                       <div className="space-y-1">
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Type:</span> {shot?.shotType || '-'}</p>
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Angle:</span> {shot?.angle || '-'}</p>
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Move:</span> {shot?.movement || '-'}</p>
-                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Light:</span> {shot?.lighting || '-'}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Type:</span> {safeText(shot?.shotType, '-')}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Angle:</span> {safeText(shot?.angle, '-')}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Move:</span> {safeText(shot?.movement, '-')}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Light:</span> {safeText(shot?.lighting, '-')}</p>
                                       </div>
                                     </td>
                                     <td className="p-2">
                                       <div className="space-y-1">
-                                        <p className="text-gray-900 font-medium">{shot?.actionZh || ''}</p>
-                                        <p className="text-gray-500 italic text-[9px]">{shot?.actionEn || ''}</p>
-                                        <p className="mt-1"><span className="opacity-50 uppercase font-bold text-[8px]">Rhythm:</span> {shot?.rhythm || '-'}</p>
+                                        <p className="text-gray-900 font-medium">{safeText(shot?.actionZh, '')}</p>
+                                        <p className="text-gray-500 italic text-[9px]">{safeText(shot?.actionEn, '')}</p>
+                                        <p className="mt-1"><span className="opacity-50 uppercase font-bold text-[8px]">Rhythm:</span> {safeText(shot?.rhythm, '-')}</p>
                                       </div>
                                     </td>
                                   </tr>
@@ -658,7 +668,7 @@ export default function App() {
                       <h3 className="font-black uppercase italic text-sm tracking-widest">AI Image Prompts</h3>
                     </div>
                     <button 
-                      onClick={() => copyToClipboard(results.imagePrompt || '', 'ip')}
+                      onClick={() => copyToClipboard(safeText(results.imagePrompt, ''), 'ip')}
                       className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
                     >
                       {copied === 'ip' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -666,7 +676,7 @@ export default function App() {
                     </button>
                   </div>
                   <div className="p-6 whitespace-pre-wrap font-mono text-xs leading-relaxed bg-[#F9F9F9] border-t border-gray-100">
-                    {results.imagePrompt || "Content generation failed for this section."}
+                    {safeText(results.imagePrompt)}
                   </div>
                 </div>
               </motion.div>
