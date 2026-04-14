@@ -16,7 +16,7 @@ export interface ProductData {
   voltage: string;
   power: string;
   features: string;
-  application: string;
+  sellingPoints: string;
 }
 
 export interface VideoShot {

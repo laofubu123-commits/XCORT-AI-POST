@@ -54,87 +54,106 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
   const apiKey = settings.apiKeys.gemini || process.env.GEMINI_API_KEY || "";
   if (!apiKey) throw new Error("Gemini API Key is missing. Please check settings.");
 
-  const ai = new GoogleGenAI({ apiKey });
   const modelName = settings.model || "gemini-3-flash-preview";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-  // Parallelize Marketing Copy and Video Script generation to save time
-  const [marketingResult, videoResult] = await Promise.all([
-    ai.models.generateContent({
-      model: modelName,
-      contents: [{
-        role: "user",
-        parts: [{
-          text: `Generate marketing copy for: ${product.name}. ${persuasive ? "Make it persuasive." : ""}
-          Details: ${JSON.stringify(product)}
-          Provide: 1. Facebook Post (EN, ZH, ES, Tags), 2. Detail Page, 3. Image Prompt.`
-        }]
-      }],
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            facebookPost: {
-              type: Type.OBJECT,
-              properties: {
-                english: { type: Type.STRING },
-                chinese: { type: Type.STRING },
-                spanish: { type: Type.STRING },
-                hashtags: { type: Type.STRING }
-              },
-              required: ["english", "chinese", "spanish", "hashtags"]
+  const basePrompt = `Product Details: ${JSON.stringify(product)}\nNOTE: The "sellingPoints" or "features" in the details might be provided in Chinese. Please understand them and incorporate these specific selling points into the generated marketing materials.`;
+
+  const marketingPayload = {
+    contents: [{
+      role: "user",
+      parts: [{
+        text: `Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}\n${basePrompt}\n\nProvide: 1. Facebook Post (English, Chinese, Spanish, and Hashtags), 2. Product Detail Page copy, 3. Professional Image Generation Prompt.`
+      }]
+    }],
+    systemInstruction: { role: "system", parts: [{ text: SYSTEM_INSTRUCTION }] },
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          facebookPost: {
+            type: "OBJECT",
+            properties: {
+              english: { type: "STRING" },
+              chinese: { type: "STRING" },
+              spanish: { type: "STRING" },
+              hashtags: { type: "STRING" }
             },
-            detailPage: { type: Type.STRING },
-            imagePrompt: { type: Type.STRING }
+            required: ["english", "chinese", "spanish", "hashtags"]
           },
-          required: ["facebookPost", "detailPage", "imagePrompt"]
-        }
+          detailPage: { type: "STRING" },
+          imagePrompt: { type: "STRING" }
+        },
+        required: ["facebookPost", "detailPage", "imagePrompt"]
       }
-    }),
-    ai.models.generateContent({
-      model: modelName,
-      contents: [{
-        role: "user",
-        parts: [{
-          text: `Generate a professional 30s video script for: ${product.name}.
-          Details: ${JSON.stringify(product)}
-          Provide: 3 parts (10s each) with full director parameters.
-          IMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.
-          IMPORTANT: Provide both English and Chinese for 'descriptionEn/Zh' and 'actionEn/Zh' fields.`
-        }]
-      }],
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            videoScript: {
-              type: Type.OBJECT,
-              properties: {
-                part1: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
-                part2: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
-                part3: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, rhythm: { type: Type.STRING } } } }
-              },
-              required: ["part1", "part2", "part3"]
-            }
-          },
-          required: ["videoScript"]
-        }
+    }
+  };
+
+  const videoPayload = {
+    contents: [{
+      role: "user",
+      parts: [{
+        text: `Generate a professional 30s video script for: ${product.name}.\n${basePrompt}\n\nProvide: A 30-second professional video script in 3 parts (10s each).\nIMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.\nIMPORTANT: Provide both English and Chinese for 'descriptionEn/Zh' and 'actionEn/Zh' fields.`
+      }]
+    }],
+    systemInstruction: { role: "system", parts: [{ text: SYSTEM_INSTRUCTION }] },
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          videoScript: {
+            type: "OBJECT",
+            properties: {
+              part1: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } },
+              part2: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } },
+              part3: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } }
+            },
+            required: ["part1", "part2", "part3"]
+          }
+        },
+        required: ["videoScript"]
       }
-    })
+    }
+  };
+
+  const fetchApi = async (payload: any) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 240000); // 240s timeout
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Gemini API Error:", errorText);
+        if (response.status === 429) throw new Error("Rate limit exceeded. Please wait a moment.");
+        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+      }
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error("Content generation failed: AI returned an empty response.");
+      return extractJson(text);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error("Request timed out. The AI is taking longer than expected.");
+      }
+      throw error;
+    }
+  };
+
+  const [marketingData, videoData] = await Promise.all([
+    fetchApi(marketingPayload),
+    fetchApi(videoPayload)
   ]);
-
-  const marketingText = marketingResult.text;
-  const videoText = videoResult.text;
-
-  if (!marketingText || !videoText) throw new Error("Content generation failed: AI returned an empty response.");
-
-  const marketingData = extractJson(marketingText);
-  const videoData = extractJson(videoText);
 
   return {
     ...marketingData,
@@ -146,41 +165,65 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
   const apiKey = settings.provider === 'openai' ? settings.apiKeys.openai : settings.apiKeys.deepseek;
   if (!apiKey) throw new Error(`${settings.provider.toUpperCase()} API Key is missing.`);
 
-  const prompt = `
+  const basePrompt = `Product Details: ${JSON.stringify(product)}\nNOTE: The "sellingPoints" or "features" in the details might be provided in Chinese. Please understand them and incorporate these specific selling points into the generated marketing materials.`;
+
+  const marketingPrompt = `
     ${SYSTEM_INSTRUCTION}
-    Generate complete marketing materials for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}
-    Details: ${JSON.stringify(product)}
-    
-    Provide JSON: { 
-      facebookPost: { english, chinese, spanish, hashtags }, 
-      detailPage, 
-      imagePrompt,
-      videoScript: { part1: [], part2: [], part3: [] }
-    }
-    
+    Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}
+    ${basePrompt}
+    Provide JSON: { facebookPost: { english, chinese, spanish, hashtags }, detailPage, imagePrompt }
+  `;
+
+  const videoPrompt = `
+    ${SYSTEM_INSTRUCTION}
+    Generate a professional 30s video script for: ${product.name}.
+    ${basePrompt}
+    Provide JSON: { videoScript: { part1: [], part2: [], part3: [] } }
     IMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.
     Each video shot must have: id, duration, descriptionEn, descriptionZh, shotType, angle, movement, actionEn, actionZh, lighting, rhythm.
   `;
 
-  const res = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: settings.model,
-      messages: [{ role: 'system', content: SYSTEM_INSTRUCTION }, { role: 'user', content: prompt }],
-      response_format: { type: "json_object" }
-    })
-  });
+  const fetchApi = async (promptText: string) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 240000); // 240s timeout
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`API request failed: ${err}`);
-  }
+    try {
+      const res = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: settings.model,
+          messages: [{ role: 'system', content: SYSTEM_INSTRUCTION }, { role: 'user', content: promptText }],
+          response_format: { type: "json_object" }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-  const data = await res.json();
-  const content = extractJson(data.choices[0].message.content);
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`API request failed: ${err}`);
+      }
+      const data = await res.json();
+      return extractJson(data.choices[0].message.content);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error("Request timed out. The AI is taking longer than expected.");
+      }
+      throw error;
+    }
+  };
 
-  return content as GeneratedContent;
+  const [marketingData, videoData] = await Promise.all([
+    fetchApi(marketingPrompt),
+    fetchApi(videoPrompt)
+  ]);
+
+  return {
+    ...marketingData,
+    videoScript: videoData.videoScript
+  } as GeneratedContent;
 }
 
 export async function generateMarketingContent(product: ProductData, settings: AISettings, persuasive: boolean = false): Promise<GeneratedContent> {

@@ -58,7 +58,7 @@ export default function App() {
     voltage: '',
     power: '',
     features: '',
-    application: ''
+    sellingPoints: ''
   });
   const [results, setResults] = useState<GeneratedContent | null>(null);
 
@@ -86,9 +86,9 @@ export default function App() {
     }, 3000);
 
     try {
-      // Create a timeout promise (120 seconds)
+      // Create a timeout promise (240 seconds)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out. The AI is taking longer than expected to generate the full industrial script. Please try again or check your network.')), 120000)
+        setTimeout(() => reject(new Error('Request timed out. The AI is taking longer than expected to generate the full industrial script. Please try again or check your network.')), 240000)
       );
 
       const content = await Promise.race([
@@ -351,13 +351,13 @@ export default function App() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider mb-1">Application</label>
+                <label className="block text-[11px] font-black uppercase tracking-wider mb-1">Tool Features / Selling Points (工具特点/卖点)</label>
                 <textarea 
-                  name="application"
-                  value={product.application}
+                  name="sellingPoints"
+                  value={product.sellingPoints}
                   onChange={handleInputChange}
                   rows={2}
-                  placeholder="e.g. Professional construction, DIY projects..."
+                  placeholder="e.g. 极具性价比，续航时间长，适合专业施工..."
                   className="w-full bg-[#F5F5F5] border-2 border-[#1A1A1A] p-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-medium resize-none"
                 />
               </div>
