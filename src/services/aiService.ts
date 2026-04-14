@@ -57,61 +57,88 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
   const ai = new GoogleGenAI({ apiKey });
   const modelName = settings.model || "gemini-3-flash-preview";
 
-  const response = await ai.models.generateContent({
-    model: modelName,
-    contents: [{
-      role: "user",
-      parts: [{
-        text: `Generate complete marketing materials for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}
-        Product Details: ${JSON.stringify(product)}
-        
-        Please provide:
-        1. Facebook Post (English, Chinese, Spanish, and Hashtags)
-        2. Product Detail Page copy
-        3. Professional Image Generation Prompt
-        4. A 30-second professional video script in 3 parts (10s each) with full director parameters.
-        
-        IMPORTANT: For the video script, provide both English and Chinese for 'descriptionEn/Zh' and 'actionEn/Zh' fields.`
-      }]
-    }],
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          facebookPost: {
-            type: Type.OBJECT,
-            properties: {
-              english: { type: Type.STRING },
-              chinese: { type: Type.STRING },
-              spanish: { type: Type.STRING },
-              hashtags: { type: Type.STRING }
+  // Parallelize Marketing Copy and Video Script generation to save time
+  const [marketingResult, videoResult] = await Promise.all([
+    ai.models.generateContent({
+      model: modelName,
+      contents: [{
+        role: "user",
+        parts: [{
+          text: `Generate marketing copy for: ${product.name}. ${persuasive ? "Make it persuasive." : ""}
+          Details: ${JSON.stringify(product)}
+          Provide: 1. Facebook Post (EN, ZH, ES, Tags), 2. Detail Page, 3. Image Prompt.`
+        }]
+      }],
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            facebookPost: {
+              type: Type.OBJECT,
+              properties: {
+                english: { type: Type.STRING },
+                chinese: { type: Type.STRING },
+                spanish: { type: Type.STRING },
+                hashtags: { type: Type.STRING }
+              },
+              required: ["english", "chinese", "spanish", "hashtags"]
             },
-            required: ["english", "chinese", "spanish", "hashtags"]
+            detailPage: { type: Type.STRING },
+            imagePrompt: { type: Type.STRING }
           },
-          detailPage: { type: Type.STRING },
-          imagePrompt: { type: Type.STRING },
-          videoScript: {
-            type: Type.OBJECT,
-            properties: {
-              part1: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
-              part2: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
-              part3: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } }
-            },
-            required: ["part1", "part2", "part3"]
-          }
-        },
-        required: ["facebookPost", "detailPage", "imagePrompt", "videoScript"]
+          required: ["facebookPost", "detailPage", "imagePrompt"]
+        }
       }
-    }
-  });
+    }),
+    ai.models.generateContent({
+      model: modelName,
+      contents: [{
+        role: "user",
+        parts: [{
+          text: `Generate a professional 30s video script for: ${product.name}.
+          Details: ${JSON.stringify(product)}
+          Provide: 3 parts (10s each) with full director parameters.
+          IMPORTANT: Provide both English and Chinese for 'descriptionEn/Zh' and 'actionEn/Zh' fields.`
+        }]
+      }],
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            videoScript: {
+              type: Type.OBJECT,
+              properties: {
+                part1: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
+                part2: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } },
+                part3: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, duration: { type: Type.STRING }, descriptionEn: { type: Type.STRING }, descriptionZh: { type: Type.STRING }, shotType: { type: Type.STRING }, angle: { type: Type.STRING }, movement: { type: Type.STRING }, composition: { type: Type.STRING }, actionEn: { type: Type.STRING }, actionZh: { type: Type.STRING }, lighting: { type: Type.STRING }, style: { type: Type.STRING }, rhythm: { type: Type.STRING } } } }
+              },
+              required: ["part1", "part2", "part3"]
+            }
+          },
+          required: ["videoScript"]
+        }
+      }
+    })
+  ]);
 
-  const text = response.text;
-  if (!text) throw new Error("Content generation failed: AI returned an empty response.");
+  const marketingText = marketingResult.text;
+  const videoText = videoResult.text;
 
-  return extractJson(text) as GeneratedContent;
+  if (!marketingText || !videoText) throw new Error("Content generation failed: AI returned an empty response.");
+
+  const marketingData = extractJson(marketingText);
+  const videoData = extractJson(videoText);
+
+  return {
+    ...marketingData,
+    videoScript: videoData.videoScript
+  } as GeneratedContent;
 }
 
 async function callOpenAICompatible(product: ProductData, settings: AISettings, persuasive: boolean, baseUrl: string): Promise<GeneratedContent> {

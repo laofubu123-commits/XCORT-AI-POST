@@ -86,9 +86,9 @@ export default function App() {
     }, 3000);
 
     try {
-      // Create a timeout promise
+      // Create a timeout promise (120 seconds)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out. The AI is taking longer than expected to generate the full industrial script. Please try again or check your network.')), 60000)
+        setTimeout(() => reject(new Error('Request timed out. The AI is taking longer than expected to generate the full industrial script. Please try again or check your network.')), 120000)
       );
 
       const content = await Promise.race([
