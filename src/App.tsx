@@ -483,7 +483,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 px-2 py-1">English</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost.english, 'fb-en')}
+                          onClick={() => copyToClipboard(results.facebookPost?.english || '', 'fb-en')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-en' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -491,7 +491,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed">
-                        {results.facebookPost.english}
+                        {results.facebookPost?.english || "Content generation failed for this section."}
                       </div>
                     </div>
 
@@ -500,7 +500,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-800 px-2 py-1">Chinese</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost.chinese, 'fb-zh')}
+                          onClick={() => copyToClipboard(results.facebookPost?.chinese || '', 'fb-zh')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-zh' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -508,7 +508,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed">
-                        {results.facebookPost.chinese}
+                        {results.facebookPost?.chinese || "Content generation failed for this section."}
                       </div>
                     </div>
 
@@ -517,7 +517,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-yellow-100 text-yellow-800 px-2 py-1">Spanish</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost.spanish, 'fb-es')}
+                          onClick={() => copyToClipboard(results.facebookPost?.spanish || '', 'fb-es')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-es' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -525,7 +525,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed">
-                        {results.facebookPost.spanish}
+                        {results.facebookPost?.spanish || "Content generation failed for this section."}
                       </div>
                     </div>
 
@@ -534,7 +534,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-widest bg-gray-200 text-gray-800 px-2 py-1">Hashtags</span>
                         <button 
-                          onClick={() => copyToClipboard(results.facebookPost.hashtags, 'fb-tags')}
+                          onClick={() => copyToClipboard(results.facebookPost?.hashtags || '', 'fb-tags')}
                           className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
                         >
                           {copied === 'fb-tags' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -542,7 +542,7 @@ export default function App() {
                         </button>
                       </div>
                       <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-blue-600">
-                        {results.facebookPost.hashtags}
+                        {results.facebookPost?.hashtags || ""}
                       </div>
                     </div>
                   </div>
@@ -556,7 +556,7 @@ export default function App() {
                       <h3 className="font-black uppercase italic text-sm tracking-widest">Product Detail Page</h3>
                     </div>
                     <button 
-                      onClick={() => copyToClipboard(results.detailPage, 'dp')}
+                      onClick={() => copyToClipboard(results.detailPage || '', 'dp')}
                       className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
                     >
                       {copied === 'dp' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -564,7 +564,7 @@ export default function App() {
                     </button>
                   </div>
                   <div className="p-6 whitespace-pre-wrap font-medium text-sm leading-relaxed max-h-[400px] overflow-y-auto custom-scrollbar">
-                    {results.detailPage}
+                    {results.detailPage || "Content generation failed for this section."}
                   </div>
                 </div>
 
@@ -577,7 +577,7 @@ export default function App() {
                     </div>
                     <button 
                       onClick={() => {
-                        const fullScript = JSON.stringify(results.videoScript, null, 2);
+                        const fullScript = JSON.stringify(results.videoScript || {}, null, 2);
                         copyToClipboard(fullScript, 'vs-full');
                       }}
                       className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
@@ -590,9 +590,11 @@ export default function App() {
                   <div className="p-6 space-y-8 max-h-[600px] overflow-y-auto custom-scrollbar">
                     {[1, 2, 3].map((partNum) => {
                       const partKey = `part${partNum}` as keyof typeof results.videoScript;
-                      const partData = results.videoScript[partKey];
+                      const partData = results.videoScript?.[partKey] || [];
                       const partTitles = ['Part 1: The Problem (0-10s)', 'Part 2: The Solution (10-20s)', 'Part 3: The Result (20-30s)'];
                       
+                      if (!partData || partData.length === 0) return null;
+
                       return (
                         <div key={partKey} className="space-y-4">
                           <h4 className="text-xs font-black uppercase tracking-widest bg-orange-100 text-orange-800 px-3 py-1 inline-block border-l-4 border-orange-500">
@@ -654,7 +656,7 @@ export default function App() {
                       <h3 className="font-black uppercase italic text-sm tracking-widest">AI Image Prompts</h3>
                     </div>
                     <button 
-                      onClick={() => copyToClipboard(results.imagePrompt, 'ip')}
+                      onClick={() => copyToClipboard(results.imagePrompt || '', 'ip')}
                       className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
                     >
                       {copied === 'ip' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -662,7 +664,7 @@ export default function App() {
                     </button>
                   </div>
                   <div className="p-6 whitespace-pre-wrap font-mono text-xs leading-relaxed bg-[#F9F9F9] border-t border-gray-100">
-                    {results.imagePrompt}
+                    {results.imagePrompt || "Content generation failed for this section."}
                   </div>
                 </div>
               </motion.div>
