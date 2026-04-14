@@ -48,7 +48,13 @@ export interface GeneratedContent {
     spanish: string;
     hashtags: string;
   };
-  detailPage: string;
-  imagePrompt: string;
+  detailPage: {
+    english: string;
+    chinese: string;
+  };
+  imagePrompt: {
+    english: string;
+    chinese: string;
+  };
   videoScript: VideoScript;
 }

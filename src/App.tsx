@@ -160,7 +160,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tighter uppercase italic">XCORT AI</h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-bold">Marketing Tool v1.1</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-bold">Marketing Tool v1.12</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -565,16 +565,40 @@ export default function App() {
                       <FileText className="w-5 h-5 text-orange-400" />
                       <h3 className="font-black uppercase italic text-sm tracking-widest">Product Detail Page</h3>
                     </div>
-                    <button 
-                      onClick={() => copyToClipboard(safeText(results.detailPage, ''), 'dp')}
-                      className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
-                    >
-                      {copied === 'dp' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {copied === 'dp' ? 'Copied!' : 'Copy Content'}
-                    </button>
                   </div>
-                  <div className="p-6 whitespace-pre-wrap font-medium text-sm leading-relaxed max-h-[400px] overflow-y-auto custom-scrollbar">
-                    {safeText(results.detailPage)}
+                  <div className="divide-y-2 divide-[#1A1A1A]">
+                    {/* English Section */}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 px-2 py-1">English</span>
+                        <button 
+                          onClick={() => copyToClipboard(safeText(results.detailPage?.english, ''), 'dp-en')}
+                          className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                        >
+                          {copied === 'dp-en' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied === 'dp-en' ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {safeText(results.detailPage?.english)}
+                      </div>
+                    </div>
+                    {/* Chinese Section */}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-800 px-2 py-1">Chinese</span>
+                        <button 
+                          onClick={() => copyToClipboard(safeText(results.detailPage?.chinese, ''), 'dp-zh')}
+                          className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                        >
+                          {copied === 'dp-zh' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied === 'dp-zh' ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <div className="whitespace-pre-wrap font-medium text-sm leading-relaxed max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {safeText(results.detailPage?.chinese)}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -667,16 +691,40 @@ export default function App() {
                       <ImageIcon className="w-5 h-5 text-purple-400" />
                       <h3 className="font-black uppercase italic text-sm tracking-widest">AI Image Prompts</h3>
                     </div>
-                    <button 
-                      onClick={() => copyToClipboard(safeText(results.imagePrompt, ''), 'ip')}
-                      className="text-xs font-bold uppercase flex items-center gap-1 hover:text-orange-400 transition-colors"
-                    >
-                      {copied === 'ip' ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {copied === 'ip' ? 'Copied!' : 'Copy Content'}
-                    </button>
                   </div>
-                  <div className="p-6 whitespace-pre-wrap font-mono text-xs leading-relaxed bg-[#F9F9F9] border-t border-gray-100">
-                    {safeText(results.imagePrompt)}
+                  <div className="divide-y-2 divide-[#1A1A1A]">
+                    {/* English Section */}
+                    <div className="p-6 bg-[#F9F9F9]">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 px-2 py-1">English</span>
+                        <button 
+                          onClick={() => copyToClipboard(safeText(results.imagePrompt?.english, ''), 'ip-en')}
+                          className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                        >
+                          {copied === 'ip-en' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied === 'ip-en' ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
+                        {safeText(results.imagePrompt?.english)}
+                      </div>
+                    </div>
+                    {/* Chinese Section */}
+                    <div className="p-6 bg-[#F9F9F9]">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-800 px-2 py-1">Chinese</span>
+                        <button 
+                          onClick={() => copyToClipboard(safeText(results.imagePrompt?.chinese, ''), 'ip-zh')}
+                          className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                        >
+                          {copied === 'ip-zh' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copied === 'ip-zh' ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
+                        {safeText(results.imagePrompt?.chinese)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>

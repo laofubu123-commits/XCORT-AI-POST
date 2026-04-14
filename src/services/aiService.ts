@@ -63,7 +63,7 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
     contents: [{
       role: "user",
       parts: [{
-        text: `Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}\n${basePrompt}\n\nProvide: 1. Facebook Post (English, Chinese, Spanish, and Hashtags), 2. Product Detail Page copy, 3. Professional Image Generation Prompt.`
+        text: `Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}\n${basePrompt}\n\nProvide: 1. Facebook Post (English, Chinese, Spanish, and Hashtags), 2. Product Detail Page copy (Provide both English and Chinese), 3. Professional Image Generation Prompt (Provide both English and Chinese).`
       }]
     }],
     systemInstruction: { role: "system", parts: [{ text: SYSTEM_INSTRUCTION }] },
@@ -82,8 +82,22 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
             },
             required: ["english", "chinese", "spanish", "hashtags"]
           },
-          detailPage: { type: "STRING" },
-          imagePrompt: { type: "STRING" }
+          detailPage: { 
+            type: "OBJECT",
+            properties: {
+              english: { type: "STRING" },
+              chinese: { type: "STRING" }
+            },
+            required: ["english", "chinese"]
+          },
+          imagePrompt: { 
+            type: "OBJECT",
+            properties: {
+              english: { type: "STRING" },
+              chinese: { type: "STRING" }
+            },
+            required: ["english", "chinese"]
+          }
         },
         required: ["facebookPost", "detailPage", "imagePrompt"]
       }
@@ -171,7 +185,7 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
     ${SYSTEM_INSTRUCTION}
     Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}
     ${basePrompt}
-    Provide JSON: { facebookPost: { english, chinese, spanish, hashtags }, detailPage, imagePrompt }
+    Provide JSON: { facebookPost: { english, chinese, spanish, hashtags }, detailPage: { english, chinese }, imagePrompt: { english, chinese } }
   `;
 
   const videoPrompt = `
