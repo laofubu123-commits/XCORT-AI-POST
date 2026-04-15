@@ -13,10 +13,12 @@ import {
   ChevronRight,
   Settings,
   X,
-  Clapperboard
+  Clapperboard,
+  History,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ProductData, GeneratedContent, AISettings, AIProvider } from './types';
+import { ProductData, GeneratedContent, AISettings, AIProvider, HistoryRecord } from './types';
 import { generateMarketingContent } from './services/aiService';
 
 const PROVIDER_MODELS: Record<AIProvider, string[]> = {
@@ -37,7 +39,14 @@ export default function App() {
   ];
   const [copied, setCopied] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   
+  const [history, setHistory] = useState<HistoryRecord[]>(() => {
+    const saved = localStorage.getItem('XCORT_AI_HISTORY');
+    if (saved) return JSON.parse(saved);
+    return [];
+  });
+
   const [settings, setSettings] = useState<AISettings>(() => {
     const saved = localStorage.getItem('XCORT_AI_SETTINGS');
     if (saved) return JSON.parse(saved);
@@ -86,9 +95,9 @@ export default function App() {
     }, 3000);
 
     try {
-      // Create a timeout promise (240 seconds)
+      // Create a timeout promise (60 seconds)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out. The AI is taking longer than expected to generate the full industrial script. Please try again or check your network.')), 240000)
+        setTimeout(() => reject(new Error('Request timed out (60s). The AI is taking longer than expected. If you are in China, Gemini might be blocked. Please use a VPN or switch to DeepSeek in Settings.')), 60000)
       );
 
       const content = await Promise.race([
@@ -97,6 +106,20 @@ export default function App() {
       ]) as GeneratedContent;
       
       setResults(content);
+
+      // Save to history
+      const newRecord: HistoryRecord = {
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        product: { ...product },
+        results: content
+      };
+      setHistory(prev => {
+        const updated = [newRecord, ...prev].slice(0, 50); // Keep last 50 records
+        localStorage.setItem('XCORT_AI_HISTORY', JSON.stringify(updated));
+        return updated;
+      });
+
     } catch (err: any) {
       console.error('Generation failed:', err);
       const message = err.message || 'Failed to generate content. Please try again.';
@@ -149,6 +172,28 @@ export default function App() {
     }
   };
 
+  const loadHistoryRecord = (record: HistoryRecord) => {
+    setProduct(record.product);
+    setResults(record.results);
+    setShowHistory(false);
+  };
+
+  const deleteHistoryRecord = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHistory(prev => {
+      const updated = prev.filter(r => r.id !== id);
+      localStorage.setItem('XCORT_AI_HISTORY', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const clearHistory = () => {
+    if (window.confirm("Are you sure you want to clear all history?")) {
+      setHistory([]);
+      localStorage.removeItem('XCORT_AI_HISTORY');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-orange-200">
       {/* Header */}
@@ -172,16 +217,109 @@ export default function App() {
                 </span>
               </div>
             </div>
-            <button 
-              onClick={() => setShowSettings(true)}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
-              title="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setShowHistory(true)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                title="History"
+              >
+                <History className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                title="Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
+
+      {/* History Modal */}
+      <AnimatePresence>
+        {showHistory && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowHistory(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white border-4 border-[#1A1A1A] p-6 shadow-[16px_16px_0px_0px_rgba(26,26,26,1)] w-full max-w-2xl max-h-[80vh] flex flex-col"
+            >
+              <button 
+                onClick={() => setShowHistory(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-[#1A1A1A] p-2 text-white">
+                  <History className="w-5 h-5" />
+                </div>
+                <h2 className="text-xl font-black uppercase italic tracking-wider">Generation History</h2>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                {history.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    <History className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="font-medium">No generation history yet.</p>
+                  </div>
+                ) : (
+                  history.map((record) => (
+                    <div 
+                      key={record.id}
+                      onClick={() => loadHistoryRecord(record)}
+                      className="group flex items-center justify-between p-4 border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 cursor-pointer transition-all"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-gray-900">{record.product.name || 'Unnamed Product'}</h3>
+                          <span className="text-[10px] font-mono bg-gray-100 px-2 py-0.5 text-gray-600">{record.product.modelNumber || 'No Model'}</span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {new Date(record.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs font-bold text-orange-500 uppercase tracking-wider">Load</span>
+                        <button
+                          onClick={(e) => deleteHistoryRecord(record.id, e)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Delete Record"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {history.length > 0 && (
+                <div className="mt-6 pt-4 border-t-2 border-gray-100 flex justify-end">
+                  <button 
+                    onClick={clearHistory}
+                    className="text-xs font-bold text-red-500 hover:text-red-600 uppercase tracking-wider flex items-center gap-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear All History
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Settings Modal */}
       <AnimatePresence>

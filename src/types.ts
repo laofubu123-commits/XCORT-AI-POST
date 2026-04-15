@@ -58,3 +58,10 @@ export interface GeneratedContent {
   };
   videoScript: VideoScript;
 }
+
+export interface HistoryRecord {
+  id: string;
+  timestamp: number;
+  product: ProductData;
+  results: GeneratedContent;
+}
