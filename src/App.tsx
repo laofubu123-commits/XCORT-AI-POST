@@ -95,9 +95,9 @@ export default function App() {
     }, 3000);
 
     try {
-      // Create a timeout promise (60 seconds)
+      // Create a timeout promise (240 seconds)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out (60s). The AI is taking longer than expected. If you are in China, Gemini might be blocked. Please use a VPN or switch to DeepSeek in Settings.')), 60000)
+        setTimeout(() => reject(new Error('Request timed out. The AI is taking longer than expected to generate the full industrial script. Please try again or check your network.')), 240000)
       );
 
       const content = await Promise.race([

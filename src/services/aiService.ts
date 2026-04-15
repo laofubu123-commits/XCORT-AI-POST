@@ -51,13 +51,7 @@ function extractJson(text: string) {
 }
 
 async function callGemini(product: ProductData, settings: AISettings, persuasive: boolean): Promise<GeneratedContent> {
-  let envKey = "";
-  try { envKey = process.env.GEMINI_API_KEY || ""; } catch (e) {}
-  if (!envKey) {
-    try { envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || ""; } catch (e) {}
-  }
-  
-  const apiKey = settings.apiKeys.gemini || envKey;
+  const apiKey = settings.apiKeys.gemini || process.env.GEMINI_API_KEY || "";
   if (!apiKey) throw new Error("Gemini API Key is missing. Please check settings.");
 
   const modelName = settings.model || "gemini-3-flash-preview";
@@ -140,7 +134,7 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
 
   const fetchApi = async (payload: any) => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 240000); // 240s timeout
     
     try {
       const response = await fetch(url, {
@@ -164,10 +158,7 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
     } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
-        throw new Error("Request timed out (60s). The AI is taking too long to respond. If you are in China, Gemini might be blocked. Please use a VPN or switch to DeepSeek in Settings.");
-      }
-      if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
-        throw new Error("Network error: Failed to connect to Gemini. If you are in China, Gemini API is likely blocked. Please use a VPN or switch to DeepSeek in Settings.");
+        throw new Error("Request timed out. The AI is taking longer than expected.");
       }
       throw error;
     }
@@ -208,7 +199,7 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
 
   const fetchApi = async (promptText: string) => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 240000); // 240s timeout
 
     try {
       const res = await fetch(`${baseUrl}/chat/completions`, {
@@ -232,10 +223,7 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
     } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
-        throw new Error(`Request timed out (60s). The ${settings.provider} API is taking too long to respond.`);
-      }
-      if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
-        throw new Error(`Network error: Failed to connect to ${settings.provider}. Please check your internet connection or VPN.`);
+        throw new Error("Request timed out. The AI is taking longer than expected.");
       }
       throw error;
     }
