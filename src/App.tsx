@@ -924,7 +924,7 @@ export default function App() {
       </main>
 
       <footer className="max-w-7xl mx-auto p-8 text-center text-gray-400 text-[10px] uppercase tracking-[0.3em] font-bold">
-        © 2026 XCORT INDUSTRIAL TOOLS • POWERED BY GEMINI AI
+        © 2026 XCORT INDUSTRIAL TOOLS • POWERED BY Pedro Hou
       </footer>
 
       <style>{`
