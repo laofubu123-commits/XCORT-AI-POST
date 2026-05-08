@@ -205,7 +205,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tighter uppercase italic">XCORT AI</h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-bold">Marketing Tool v1.12</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-bold">Marketing Tool v1.2</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -776,11 +776,11 @@ export default function App() {
                             <table className="w-full text-[10px] text-left border-collapse">
                               <thead>
                                 <tr className="bg-gray-50 border-b-2 border-gray-200">
-                                  <th className="p-2 font-black uppercase border-r border-gray-200">Shot</th>
-                                  <th className="p-2 font-black uppercase border-r border-gray-200">Duration</th>
-                                  <th className="p-2 font-black uppercase border-r border-gray-200">Visual Description</th>
-                                  <th className="p-2 font-black uppercase border-r border-gray-200">Parameters</th>
-                                  <th className="p-2 font-black uppercase">Action/Rhythm</th>
+                                  <th className="p-2 font-black uppercase border-r border-gray-200 w-16">Shot</th>
+                                  <th className="p-2 font-black uppercase border-r border-gray-200">Visuals</th>
+                                  <th className="p-2 font-black uppercase border-r border-gray-200">Camera / Params</th>
+                                  <th className="p-2 font-black uppercase border-r border-gray-200 w-48">Action</th>
+                                  <th className="p-2 font-black uppercase w-48">Voiceover (旁白)</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y border-gray-200">
@@ -788,27 +788,35 @@ export default function App() {
                                   if (!shot) return null;
                                   return (
                                   <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                    <td className="p-2 font-mono font-bold border-r border-gray-100">{shot?.id || '-'}</td>
-                                    <td className="p-2 font-mono border-r border-gray-100">{shot?.duration || '-'}</td>
-                                    <td className="p-2 border-r border-gray-100 leading-relaxed">
+                                    <td className="p-2 border-r border-gray-100">
+                                      <div className="font-mono font-bold text-gray-900">{shot?.id || '-'}</div>
+                                      <div className="font-mono text-[9px] text-gray-400 mt-1">{shot?.duration || '-'}</div>
+                                    </td>
+                                    <td className="p-2 border-r border-gray-100 leading-relaxed min-w-[150px]">
                                       <div className="space-y-1">
                                         <p className="text-gray-900 font-medium">{safeText(shot?.descriptionZh, '')}</p>
                                         <p className="text-gray-500 italic text-[9px]">{safeText(shot?.descriptionEn, '')}</p>
                                       </div>
                                     </td>
-                                    <td className="p-2 border-r border-gray-100">
+                                    <td className="p-2 border-r border-gray-100 min-w-[120px]">
                                       <div className="space-y-1">
                                         <p><span className="opacity-50 uppercase font-bold text-[8px]">Type:</span> {safeText(shot?.shotType, '-')}</p>
                                         <p><span className="opacity-50 uppercase font-bold text-[8px]">Angle:</span> {safeText(shot?.angle, '-')}</p>
                                         <p><span className="opacity-50 uppercase font-bold text-[8px]">Move:</span> {safeText(shot?.movement, '-')}</p>
                                         <p><span className="opacity-50 uppercase font-bold text-[8px]">Light:</span> {safeText(shot?.lighting, '-')}</p>
+                                        <p><span className="opacity-50 uppercase font-bold text-[8px]">Tempo:</span> {safeText(shot?.rhythm, '-')}</p>
                                       </div>
                                     </td>
-                                    <td className="p-2">
+                                    <td className="p-2 border-r border-gray-100">
                                       <div className="space-y-1">
                                         <p className="text-gray-900 font-medium">{safeText(shot?.actionZh, '')}</p>
                                         <p className="text-gray-500 italic text-[9px]">{safeText(shot?.actionEn, '')}</p>
-                                        <p className="mt-1"><span className="opacity-50 uppercase font-bold text-[8px]">Rhythm:</span> {safeText(shot?.rhythm, '-')}</p>
+                                      </div>
+                                    </td>
+                                    <td className="p-2 min-w-[150px]">
+                                      <div className="space-y-1">
+                                        <p className="text-gray-900 font-medium">{safeText(shot?.voiceoverZh, '-')}</p>
+                                        <p className="text-gray-500 italic text-[9px]">{safeText(shot?.voiceoverEn, '-')}</p>
                                       </div>
                                     </td>
                                   </tr>
@@ -830,37 +838,81 @@ export default function App() {
                       <h3 className="font-black uppercase italic text-sm tracking-widest">AI Image Prompts</h3>
                     </div>
                   </div>
-                  <div className="divide-y-2 divide-[#1A1A1A]">
-                    {/* English Section */}
-                    <div className="p-6 bg-[#F9F9F9]">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 px-2 py-1">English</span>
-                        <button 
-                          onClick={() => copyToClipboard(safeText(results.imagePrompt?.english, ''), 'ip-en')}
-                          className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
-                        >
-                          {copied === 'ip-en' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          {copied === 'ip-en' ? 'Copied!' : 'Copy'}
-                        </button>
+                  <div className="divide-y-4 divide-[#1A1A1A]">
+                    {/* Ecommerce Prompts */}
+                    <div className="bg-[#F9F9F9] flex flex-col">
+                      <div className="p-3 bg-gray-200 border-b border-[#1A1A1A] font-bold text-xs uppercase tracking-widest text-[#1A1A1A]">
+                        1. E-Commerce Background (电商白底/场景图)
                       </div>
-                      <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
-                        {safeText(results.imagePrompt?.english)}
+                      <div className="divide-y-2 divide-[#1A1A1A]">
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 px-2 py-1">English</span>
+                            <button 
+                              onClick={() => copyToClipboard(safeText(results.imagePrompt?.ecommerce?.english, ''), 'ip-e-en')}
+                              className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                            >
+                              {copied === 'ip-e-en' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {copied === 'ip-e-en' ? 'Copied!' : 'Copy'}
+                            </button>
+                          </div>
+                          <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
+                            {safeText(results.imagePrompt?.ecommerce?.english)}
+                          </div>
+                        </div>
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-800 px-2 py-1">Chinese</span>
+                            <button 
+                              onClick={() => copyToClipboard(safeText(results.imagePrompt?.ecommerce?.chinese, ''), 'ip-e-zh')}
+                              className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                            >
+                              {copied === 'ip-e-zh' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {copied === 'ip-e-zh' ? 'Copied!' : 'Copy'}
+                            </button>
+                          </div>
+                          <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
+                            {safeText(results.imagePrompt?.ecommerce?.chinese)}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    {/* Chinese Section */}
-                    <div className="p-6 bg-[#F9F9F9]">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-800 px-2 py-1">Chinese</span>
-                        <button 
-                          onClick={() => copyToClipboard(safeText(results.imagePrompt?.chinese, ''), 'ip-zh')}
-                          className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
-                        >
-                          {copied === 'ip-zh' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          {copied === 'ip-zh' ? 'Copied!' : 'Copy'}
-                        </button>
+                    {/* Promotional Prompts */}
+                    <div className="bg-[#F9F9F9] flex flex-col">
+                      <div className="p-3 bg-gray-200 border-b border-[#1A1A1A] font-bold text-xs uppercase tracking-widest text-[#1A1A1A]">
+                        2. Promotional Shot (产品宣传图)
                       </div>
-                      <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
-                        {safeText(results.imagePrompt?.chinese)}
+                      <div className="divide-y-2 divide-[#1A1A1A]">
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 px-2 py-1">English</span>
+                            <button 
+                              onClick={() => copyToClipboard(safeText(results.imagePrompt?.promotional?.english, ''), 'ip-p-en')}
+                              className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                            >
+                              {copied === 'ip-p-en' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {copied === 'ip-p-en' ? 'Copied!' : 'Copy'}
+                            </button>
+                          </div>
+                          <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
+                            {safeText(results.imagePrompt?.promotional?.english)}
+                          </div>
+                        </div>
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-red-100 text-red-800 px-2 py-1">Chinese</span>
+                            <button 
+                              onClick={() => copyToClipboard(safeText(results.imagePrompt?.promotional?.chinese, ''), 'ip-p-zh')}
+                              className="text-[10px] font-bold uppercase flex items-center gap-1 hover:text-orange-500 transition-colors"
+                            >
+                              {copied === 'ip-p-zh' ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {copied === 'ip-p-zh' ? 'Copied!' : 'Copy'}
+                            </button>
+                          </div>
+                          <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
+                            {safeText(results.imagePrompt?.promotional?.chinese)}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

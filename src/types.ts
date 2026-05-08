@@ -30,6 +30,8 @@ export interface VideoShot {
   composition: string;
   actionEn: string;
   actionZh: string;
+  voiceoverEn: string;
+  voiceoverZh: string;
   lighting: string;
   style: string;
   rhythm: string;
@@ -53,8 +55,14 @@ export interface GeneratedContent {
     chinese: string;
   };
   imagePrompt: {
-    english: string;
-    chinese: string;
+    ecommerce: {
+      english: string;
+      chinese: string;
+    };
+    promotional: {
+      english: string;
+      chinese: string;
+    };
   };
   videoScript: VideoScript;
 }

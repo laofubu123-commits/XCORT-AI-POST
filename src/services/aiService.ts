@@ -7,15 +7,15 @@ Your goal is to help distributors and sales teams generate high-conversion marke
 When generating content:
 1. Facebook Post: Professional tone, focus on performance and cost-effectiveness. Provide separate sections for English, Chinese, Spanish, and Hashtags.
 2. Product Detail Page: Structured with Title, Short Intro, 5 Bullet Selling Points, Technical Parameters, Usage Scenarios, and a Brand Trust closing.
-3. Image Prompt: Generate highly realistic, professional product photography prompts dynamically tailored to the specific product.
-   - ADAPTIVE CONTEXT: First, analyze the product. Heavy machinery needs a rugged, outdoor, or busy construction site vibe; precision tools need clean, high-tech indoor workshops; light/home tools need modern residential environments. DO NOT use the same setting for all products.
-   - Use photography-specific language (e.g., lens, aperture, lighting type) to match the chosen environment.
-   - Describe authentic textures relevant to the product (e.g., muddy/weathered vs clean/shiny).
-   - Ensure the product (XCORT brand) is the hero, looking like a real, tangible tool.
+3. Image Prompts: Generate TWO highly realistic photography prompts.
+   - CRITICAL RULE: DO NOT hallucinate or specify the product's color or physical design. 
+   - CRITICAL RULE: Every prompt MUST start with the exact phrase: "Strictly base the product's appearance, shape, and color on the provided reference image." (依照参考图生成产品，保持产品原本的颜色和形状不变。)
+   - Prompt 1 (ecommerce): Clean, bright, commercial product photography for an e-commerce store (e.g., solid backdrop, subtle reflections, soft studio lighting).
+   - Prompt 2 (promotional): Dynamic, cinematic, lifestyle or in-use marketing shot tailored to the product's specific vibe (e.g., rugged construction site for a hammer, clean modern workshop for precision tools).
 4. Video Script: Generate a 30-second director's storyboard script adaptively tailored to the specific product's vibe.
    - Structure: 3 parts (10s each). Part 1: Scene/Problem, Part 2: Product/Solution, Part 3: Result/Brand.
-   - ADAPTIVE STYLE: Match the cinematic style, pacing, and lighting to the product. For example, a heavy rotary hammer should have aggressive pacing, high contrast, gritty texture, and dynamic camera movements. A laser level should have slow, smooth, precise movements, clean lighting, and a high-tech vibe. DO NOT just use one rigid "industrial" template for everything.
-   - Fields: Shot ID, Duration, Description (EN & ZH), Shot Type, Angle, Movement, Composition, Action (EN & ZH), Lighting, Style, Rhythm.
+   - ADAPTIVE STYLE: Match the cinematic style, pacing, and lighting to the product. DO NOT just use one rigid "industrial" template for everything. Create a unique narrative tailored specifically to the product's unique selling points. Include English and Chinese voiceover (voiceoverEn / voiceoverZh) for compelling narration bridging the scenes.
+   - Fields: Shot ID, Duration, Description (EN & ZH), Shot Type, Angle, Movement, Composition, Action (EN & ZH), voiceoverEn, voiceoverZh, Lighting, Style, Rhythm.
 
 Always return the response in a structured JSON format.`;
 
@@ -62,7 +62,7 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
     contents: [{
       role: "user",
       parts: [{
-        text: `Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}\n${basePrompt}\n\nProvide: 1. Facebook Post (English, Chinese, Spanish, and Hashtags), 2. Product Detail Page copy (Provide both English and Chinese), 3. Professional Image Generation Prompt (Provide both English and Chinese).`
+        text: `Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}\n${basePrompt}\n\nProvide: 1. Facebook Post (English, Chinese, Spanish, and Hashtags), 2. Product Detail Page copy (Provide both English and Chinese), 3. Professional Image Generation Prompts (ecommerce and promotional, both English and Chinese).`
       }]
     }],
     systemInstruction: { role: "system", parts: [{ text: SYSTEM_INSTRUCTION }] },
@@ -92,10 +92,18 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
           imagePrompt: { 
             type: "OBJECT",
             properties: {
-              english: { type: "STRING" },
-              chinese: { type: "STRING" }
+              ecommerce: {
+                type: "OBJECT",
+                properties: { english: { type: "STRING" }, chinese: { type: "STRING" } },
+                required: ["english", "chinese"]
+              },
+              promotional: {
+                type: "OBJECT",
+                properties: { english: { type: "STRING" }, chinese: { type: "STRING" } },
+                required: ["english", "chinese"]
+              }
             },
-            required: ["english", "chinese"]
+            required: ["ecommerce", "promotional"]
           }
         },
         required: ["facebookPost", "detailPage", "imagePrompt"]
@@ -107,7 +115,7 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
     contents: [{
       role: "user",
       parts: [{
-        text: `Generate a professional 30s video script for: ${product.name}.\n${basePrompt}\n\nProvide: A 30-second professional video script in 3 parts (10s each).\nIMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.\nIMPORTANT: Provide both English and Chinese for 'descriptionEn/Zh' and 'actionEn/Zh' fields.`
+        text: `Generate a professional 30s video script for: ${product.name}.\n${basePrompt}\n\nProvide: A 30-second professional video script in 3 parts (10s each).\nIMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.\nIMPORTANT: Provide both English and Chinese for 'descriptionEn/Zh', 'actionEn/Zh', and 'voiceoverEn/Zh' fields.`
       }]
     }],
     systemInstruction: { role: "system", parts: [{ text: SYSTEM_INSTRUCTION }] },
@@ -119,9 +127,9 @@ async function callGemini(product: ProductData, settings: AISettings, persuasive
           videoScript: {
             type: "OBJECT",
             properties: {
-              part1: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } },
-              part2: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } },
-              part3: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } }
+              part1: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, voiceoverEn: { type: "STRING" }, voiceoverZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } },
+              part2: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, voiceoverEn: { type: "STRING" }, voiceoverZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } },
+              part3: { type: "ARRAY", items: { type: "OBJECT", properties: { id: { type: "STRING" }, duration: { type: "STRING" }, descriptionEn: { type: "STRING" }, descriptionZh: { type: "STRING" }, shotType: { type: "STRING" }, angle: { type: "STRING" }, movement: { type: "STRING" }, actionEn: { type: "STRING" }, actionZh: { type: "STRING" }, voiceoverEn: { type: "STRING" }, voiceoverZh: { type: "STRING" }, lighting: { type: "STRING" }, rhythm: { type: "STRING" } } } }
             },
             required: ["part1", "part2", "part3"]
           }
@@ -184,7 +192,7 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
     ${SYSTEM_INSTRUCTION}
     Generate marketing copy for: ${product.name}. ${persuasive ? "Make it highly persuasive." : ""}
     ${basePrompt}
-    Provide JSON: { facebookPost: { english, chinese, spanish, hashtags }, detailPage: { english, chinese }, imagePrompt: { english, chinese } }
+    Provide JSON: { facebookPost: { english, chinese, spanish, hashtags }, detailPage: { english, chinese }, imagePrompt: { ecommerce: { english, chinese }, promotional: { english, chinese } } }
   `;
 
   const videoPrompt = `
@@ -193,7 +201,7 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
     ${basePrompt}
     Provide JSON: { videoScript: { part1: [], part2: [], part3: [] } }
     IMPORTANT: Generate EXACTLY 2 shots per part to keep it concise.
-    Each video shot must have: id, duration, descriptionEn, descriptionZh, shotType, angle, movement, actionEn, actionZh, lighting, rhythm.
+    Each video shot must have: id, duration, descriptionEn, descriptionZh, shotType, angle, movement, actionEn, actionZh, voiceoverEn, voiceoverZh, lighting, rhythm.
   `;
 
   const fetchApi = async (promptText: string) => {
@@ -214,8 +222,17 @@ async function callOpenAICompatible(product: ProductData, settings: AISettings, 
       clearTimeout(timeoutId);
 
       if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`API request failed: ${err}`);
+        const errText = await res.text();
+        let errMsg = errText;
+        try {
+          const parsed = JSON.parse(errText);
+          if (parsed.error && parsed.error.message) {
+            errMsg = parsed.error.message;
+          }
+        } catch (e) {
+          // ignore JSON parse error
+        }
+        throw new Error(`API request failed: ${errMsg}`);
       }
       const data = await res.json();
       return extractJson(data.choices[0].message.content);
